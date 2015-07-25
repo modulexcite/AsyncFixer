@@ -41,7 +41,7 @@ namespace AsyncFixer.Test
     }";
             var expected = new DiagnosticResult
             {
-                Id = AsyncFixerAnalyzer.DiagnosticId,
+                Id = Constants.UnnecessaryAsyncId,
                 Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
@@ -71,12 +71,12 @@ namespace AsyncFixer.Test
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
-            return new AsyncFixerCodeFixProvider();
+            return new UnnecessaryAsyncFixer();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
-            return new AsyncFixerAnalyzer();
+            return new UnnecessaryAsyncAnalyzer();
         }
     }
 }

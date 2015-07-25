@@ -1,10 +1,10 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
+using System.Diagnostics;
 using RoslynUtilities;
 
 namespace AsyncFixer
@@ -12,21 +12,16 @@ namespace AsyncFixer
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class LongRunningAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "AsyncFixer002";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.LongRunningTitle), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.LongRunningMessage), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.LongRunningDescription), Resources.ResourceManager, typeof(Resources));
 
-        internal static DiagnosticDescriptor Rule = new DiagnosticDescriptor(id: DiagnosticId,
-            title: "Long running / blocking operations under an async method",
-            messageFormat: "{0} should be used instead of {1}.",
-            category: "AsyncUsage",
-            defaultSeverity: DiagnosticSeverity.Warning,
-            isEnabledByDefault: true);
+        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(Constants.LongRunningId, Title, MessageFormat, Constants.Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
         public override void Initialize(AnalysisContext context)
         {
-            // TODO: Consider registering other actions that act on syntax instead of or in addition to symbols
-            // context.RegisterSyntaxNodeAction(AnalyzeMethod, SyntaxKind.MethodDeclaration);
             context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.SimpleMemberAccessExpression);
         }
 

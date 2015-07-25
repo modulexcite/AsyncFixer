@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,18 +9,18 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Simplification;
 using RoslynUtilities;
+using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.Formatting;
 
 namespace AsyncFixer
 {
-    [ExportCodeFixProvider(UnnecessaryAsyncAnalyzer.DiagnosticId, LanguageNames.CSharp), Shared]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(UnnecessaryAsyncFixer)), Shared]
     public class UnnecessaryAsyncFixer : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds()
+        public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            return ImmutableArray.Create(UnnecessaryAsyncAnalyzer.DiagnosticId);
+            get { return ImmutableArray.Create(Constants.UnnecessaryAsyncId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -29,7 +28,7 @@ namespace AsyncFixer
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
@@ -39,7 +38,7 @@ namespace AsyncFixer
 
             var methodDeclaration = root.FindToken(diagnosticSpan.Start).Parent.FirstAncestorOrSelf<MethodDeclarationSyntax>();
 
-            context.RegisterFix(
+            context.RegisterCodeFix(
                 CodeAction.Create("Remove async/await", c => RemoveAsyncAwait(context.Document, methodDeclaration, c)),
                 diagnostic);
         }
@@ -49,7 +48,7 @@ namespace AsyncFixer
             MethodDeclarationSyntax newMethodDecl;
 
             // (1) Remove async keyword
-            newMethodDecl = methodDecl.WithModifiers(methodDecl.Modifiers.Remove(methodDecl.Modifiers.First(a => a.CSharpKind() == SyntaxKind.AsyncKeyword)));
+            newMethodDecl = methodDecl.WithModifiers(methodDecl.Modifiers.Remove(methodDecl.Modifiers.First(a => a.Kind() == SyntaxKind.AsyncKeyword)));
 
             // (2) If void, convert it to Task
             if (newMethodDecl.ReturnsVoid())
@@ -81,7 +80,7 @@ namespace AsyncFixer
                     }
                 }
 
-                if (awaitExpr.Parent.CSharpKind() == SyntaxKind.ReturnStatement)
+                if (awaitExpr.Parent.Kind() == SyntaxKind.ReturnStatement)
                 {
                     oldNode = awaitExpr;
                     newNode = newAwaitExpr.Expression.WithAdditionalAnnotations(Simplifier.Annotation);

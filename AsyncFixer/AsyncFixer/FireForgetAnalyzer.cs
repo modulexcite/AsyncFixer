@@ -1,8 +1,10 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Diagnostics;
 using RoslynUtilities;
 
 namespace AsyncFixer
@@ -10,14 +12,11 @@ namespace AsyncFixer
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class FireForgetAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "AsyncFixer003";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.FireForgetTitle), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.FireForgetMessage), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.FireForgetDescription), Resources.ResourceManager, typeof(Resources));
 
-        internal static DiagnosticDescriptor Rule = new DiagnosticDescriptor(id: DiagnosticId,
-            title: "Avoid Fire&Forget Async Methods",
-            messageFormat: "{0} is a fire&forget async method. It should return non-void.",
-            category: "AsyncUsage",
-            defaultSeverity: DiagnosticSeverity.Warning,
-            isEnabledByDefault: true);
+        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(Constants.FireForgetId, Title, MessageFormat, Constants.Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
@@ -25,7 +24,6 @@ namespace AsyncFixer
         {
             context.RegisterSyntaxNodeAction(AnalyzeMethodDeclaration, SyntaxKind.MethodDeclaration);
         }
-
         private void AnalyzeMethodDeclaration(SyntaxNodeAnalysisContext context)
         {
             var node = (MethodDeclarationSyntax)context.Node;
@@ -36,6 +34,5 @@ namespace AsyncFixer
                 context.ReportDiagnostic(diagnostic);
             }
         }
-
     }
 }

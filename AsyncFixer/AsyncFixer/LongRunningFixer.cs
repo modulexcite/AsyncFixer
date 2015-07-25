@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,17 +9,15 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Simplification;
-using RoslynUtilities;
 
 namespace AsyncFixer
 {
-    [ExportCodeFixProvider(LongRunningAnalyzer.DiagnosticId, LanguageNames.CSharp), Shared]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(LongRunningFixer)), Shared]
     public class LongRunningFixer : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds()
+        public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            return ImmutableArray.Create(LongRunningAnalyzer.DiagnosticId);
+            get { return ImmutableArray.Create(Constants.LongRunningId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -29,18 +25,16 @@ namespace AsyncFixer
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-           
-            // TODO: Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             var memberAccess = root.FindToken(diagnosticSpan.Start).Parent.FirstAncestorOrSelf<MemberAccessExpressionSyntax>();
 
-            context.RegisterFix(
+            context.RegisterCodeFix(
                 CodeAction.Create("Insert Async Call", c => InsertAsyncCall(context.Document, memberAccess, c)),
                 diagnostic);
         }
@@ -48,7 +42,7 @@ namespace AsyncFixer
         private async Task<Document> InsertAsyncCall(Document document, MemberAccessExpressionSyntax memberAccess, CancellationToken cancellationToken)
         {
             var name = memberAccess.Name.Identifier.ValueText;
-            ExpressionSyntax oldNode,newNode,newMemberAccess;
+            ExpressionSyntax oldNode, newNode, newMemberAccess;
             switch (name)
             {
                 case "WaitAny":
@@ -67,7 +61,7 @@ namespace AsyncFixer
                     newMemberAccess = SyntaxFactory.ParseExpression("Task.Delay");
                     break;
                 default:
-                    newMemberAccess = memberAccess.WithName((SimpleNameSyntax)SyntaxFactory.ParseName(memberAccess.Name.Identifier.ValueText +"Async"));
+                    newMemberAccess = memberAccess.WithName((SimpleNameSyntax)SyntaxFactory.ParseName(memberAccess.Name.Identifier.ValueText + "Async"));
                     break;
             }
 
@@ -90,7 +84,7 @@ namespace AsyncFixer
                 .WithLeadingTrivia(memberAccess.GetLeadingTrivia())
                 .WithTrailingTrivia(memberAccess.GetTrailingTrivia());
 
-            if (oldNode.Parent.CSharpKind() == SyntaxKind.SimpleMemberAccessExpression)
+            if (oldNode.Parent.Kind() == SyntaxKind.SimpleMemberAccessExpression)
             {
                 newNode = SyntaxFactory.ParenthesizedExpression(newNode);
             }

@@ -8,16 +8,17 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Simplification;
 
 namespace AsyncFixer
 {
-    [ExportCodeFixProvider(FireForgetAnalyzer.DiagnosticId, LanguageNames.CSharp), Shared]
+    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(FireForgetFixer)), Shared]
     public class FireForgetFixer : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds()
+        public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            return ImmutableArray.Create(FireForgetAnalyzer.DiagnosticId);
+            get { return ImmutableArray.Create(Constants.FireForgetId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -25,17 +26,16 @@ namespace AsyncFixer
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-            // TODO: Replace the following code with your own analysis, generating a CodeAction for each fix to suggest
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
 
             var methodDeclaration = root.FindToken(diagnosticSpan.Start).Parent.FirstAncestorOrSelf<MethodDeclarationSyntax>();
 
-            context.RegisterFix(
+            context.RegisterCodeFix(
                 CodeAction.Create("Convert void to Task", c => Convert2Task(context.Document, methodDeclaration, c)),
                 diagnostic);
         }

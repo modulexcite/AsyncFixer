@@ -117,16 +117,34 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AnalyzerDescription" xml:space="preserve">
-    <value>Type names should be all uppercase.</value>
+  <data name="FireForgetDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="FireForgetMessage" xml:space="preserve">
+    <value>{0} is a fire&amp;forget async method. It should return non-void.</value>
+  </data>
+  <data name="FireForgetTitle" xml:space="preserve">
+    <value>Avoid fire &amp; forget async methods</value>
+  </data>
+  <data name="LongRunningDescription" xml:space="preserve">
+    <value />
+  </data>
+  <data name="LongRunningMessage" xml:space="preserve">
+    <value>{0} should be used instead of {1}.</value>
+  </data>
+  <data name="LongRunningTitle" xml:space="preserve">
+    <value>Long running / blocking operations under an async method</value>
+  </data>
+  <data name="UnnecessaryAsyncDescription" xml:space="preserve">
+    <value>Await is the last statement of the method so you can return Task and await in the caller method.</value>
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
-  <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>Type name '{0}' contains lowercase letters</value>
+  <data name="UnnecessaryAsyncMessage" xml:space="preserve">
+    <value>The method '{0}' do not need to use async/await.</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
-  <data name="AnalyzerTitle" xml:space="preserve">
-    <value>Type name contains lowercase letters</value>
+  <data name="UnnecessaryAsyncTitle" xml:space="preserve">
+    <value>Unnecessary async/await usage</value>
     <comment>The title of the diagnostic.</comment>
   </data>
 </root>

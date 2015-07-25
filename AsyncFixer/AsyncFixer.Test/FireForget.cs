@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Temp
+namespace FireForget
 {
     class Program
     {
@@ -12,11 +12,10 @@ namespace Temp
         {
         }
 
-
-        public async static Task foo3(int i)
+        static async void foo()
         {
-            (await Task.Run(() => { return 3; })).ToString();
+            await Task.Delay(300);
+            await Task.Delay(100);
         }
-
     }
 }

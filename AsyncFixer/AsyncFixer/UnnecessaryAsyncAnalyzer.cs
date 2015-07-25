@@ -1,10 +1,10 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Diagnostics;
 using RoslynUtilities;
 
 namespace AsyncFixer
@@ -12,16 +12,13 @@ namespace AsyncFixer
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class UnnecessaryAsyncAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "AsyncFixer001";
+        private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.UnnecessaryAsyncTitle), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.UnnecessaryAsyncMessage), Resources.ResourceManager, typeof(Resources));
+        private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.UnnecessaryAsyncDescription), Resources.ResourceManager, typeof(Resources));
 
-        internal static DiagnosticDescriptor Rule1 = new DiagnosticDescriptor(id: DiagnosticId,
-            title: "Unnecessary async/await",
-            messageFormat: "The method '{0}' do not need to use async/await",
-            category: "AsyncUsage",
-            defaultSeverity: DiagnosticSeverity.Warning,
-            isEnabledByDefault: true);
+        private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(Constants.UnnecessaryAsyncId, Title, MessageFormat, Constants.Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule1); } }
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
         public override void Initialize(AnalysisContext context)
         {
@@ -52,7 +49,7 @@ namespace AsyncFixer
                     // if awaitExpression is the last statement's expression
                     var lastStatement = node.Body.Statements.Last();
                     var exprStmt = lastStatement as ExpressionStatementSyntax;
-                    if (exprStmt == null || exprStmt.Expression == null || exprStmt.Expression.CSharpKind() != SyntaxKind.AwaitExpression)
+                    if (exprStmt == null || exprStmt.Expression == null || exprStmt.Expression.Kind() != SyntaxKind.AwaitExpression)
                         return;
                     numAwait++;
                 }
@@ -61,7 +58,7 @@ namespace AsyncFixer
                     foreach (var temp in returnStatements)
                     {
                         var returnStatement = (ReturnStatementSyntax)temp;
-                        if (returnStatement.Expression == null || returnStatement.Expression.CSharpKind() != SyntaxKind.AwaitExpression)
+                        if (returnStatement.Expression == null || returnStatement.Expression.Kind() != SyntaxKind.AwaitExpression)
                             return;
                         numAwait++;
                     }
@@ -70,7 +67,7 @@ namespace AsyncFixer
                 if (numAwait < totalAwait)
                     return;
 
-                var diagnostic = Diagnostic.Create(Rule1, node.GetLocation(), node.Identifier.Text);
+                var diagnostic = Diagnostic.Create(Rule, node.GetLocation(), node.Identifier.Text);
                 context.ReportDiagnostic(diagnostic);
             }
         }
