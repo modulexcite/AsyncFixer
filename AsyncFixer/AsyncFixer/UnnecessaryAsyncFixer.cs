@@ -48,7 +48,10 @@ namespace AsyncFixer
             MethodDeclarationSyntax newMethodDecl;
 
             // (1) Remove async keyword
-            newMethodDecl = methodDecl.WithModifiers(methodDecl.Modifiers.Remove(methodDecl.Modifiers.First(a => a.Kind() == SyntaxKind.AsyncKeyword)));
+            var asyncModifier = methodDecl.Modifiers.First(a => a.Kind() == SyntaxKind.AsyncKeyword);
+            newMethodDecl = asyncModifier.HasLeadingTrivia 
+                ? methodDecl.WithModifiers(methodDecl.Modifiers.Remove(asyncModifier)).WithLeadingTrivia(asyncModifier.LeadingTrivia)
+                : methodDecl.WithModifiers(methodDecl.Modifiers.Remove(asyncModifier));
 
             // (2) If void, convert it to Task
             if (newMethodDecl.ReturnsVoid())

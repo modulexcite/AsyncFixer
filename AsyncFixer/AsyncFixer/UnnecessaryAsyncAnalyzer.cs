@@ -29,43 +29,72 @@ namespace AsyncFixer
         {
             var node = (MethodDeclarationSyntax)context.Node;
 
-            if (node.IsAsync() && node.Body != null && !node.HasEventArgsParameter() && !node.HasObjectStateParameter())
+            if (node.IsAsync() && node.Body != null && !node.HasEventArgsParameter() && !node.HasObjectStateParameter() && !node.IsTestMethod())
             {
                 // If method in this form async void Xyz(object state) { ..}, ignore it!
                 if (node.ParameterList != null && node.ParameterList.Parameters.Count == 1 && node.ParameterList.Parameters.First().Type.ToString() == "object")
                     return;
 
-                Debug.Assert(context.SemanticModel != null);
+                if(context.SemanticModel == null)
+                {
+                    return;
+                }
+
                 var controlFlow = context.SemanticModel.AnalyzeControlFlow(node.Body);
+                if (controlFlow == null)
+                {
+                    return;
+                }
 
-                Debug.Assert(controlFlow != null);
                 var returnStatements = controlFlow.ReturnStatements;
-
-                Debug.Assert(returnStatements != null);
+                if (returnStatements == null)
+                {
+                    return;
+                }
 
                 int numAwait = 0;
                 if (returnStatements.Count() == 0)
                 {
                     // if awaitExpression is the last statement's expression
-                    var lastStatement = node.Body.Statements.Last();
+                    var lastStatement = node.Body.Statements.LastOrDefault();
+                    if(lastStatement == null)
+                    {
+                        return;
+                    }
+
                     var exprStmt = lastStatement as ExpressionStatementSyntax;
                     if (exprStmt == null || exprStmt.Expression == null || exprStmt.Expression.Kind() != SyntaxKind.AwaitExpression)
+                    {
                         return;
+                    }
+
                     numAwait++;
                 }
                 else
                 {
                     foreach (var temp in returnStatements)
                     {
-                        var returnStatement = (ReturnStatementSyntax)temp;
-                        if (returnStatement.Expression == null || returnStatement.Expression.Kind() != SyntaxKind.AwaitExpression)
+                        var returnStatement = temp as ReturnStatementSyntax;
+                        if (returnStatement == null)
+                        {
                             return;
+                        }
+
+                        if (returnStatement.Expression == null || returnStatement.Expression.Kind() != SyntaxKind.AwaitExpression)
+                        {
+                            return;
+                        }
+
                         numAwait++;
                     }
                 }
+
                 int totalAwait = node.Body.DescendantNodes().OfType<AwaitExpressionSyntax>().Count();
+
                 if (numAwait < totalAwait)
+                {
                     return;
+                }
 
                 var diagnostic = Diagnostic.Create(Rule, node.GetLocation(), node.Identifier.Text);
                 context.ReportDiagnostic(diagnostic);
