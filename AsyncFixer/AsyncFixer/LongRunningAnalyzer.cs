@@ -40,13 +40,13 @@ namespace AsyncFixer
 
                 if (invokeMethod != null && invokeMethod.Name != "Invoke")
                 {
-                    replacement = DetectSynchronousUsages(((IMethodSymbol)invokeMethod.OriginalDefinition), context.SemanticModel);
+                    replacement = DetectSynchronousUsages((invokeMethod.OriginalDefinition), context.SemanticModel);
                     report = replacement != "None";
                 }
 
                 var property = context.SemanticModel.GetSymbolInfo(node).Symbol as IPropertySymbol;
 
-                if (property != null && property.OriginalDefinition.ContainingType.Name == "Task" && property.OriginalDefinition.Name == "Result")
+                if (property != null && property.OriginalDefinition.ContainingType != null && property.OriginalDefinition.ContainingType.Name == "Task" && property.OriginalDefinition.Name == "Result")
                 {
                     var name = node.Expression.ToString();
                     if (!methodSyntax.DescendantNodes().OfType<AwaitExpressionSyntax>().Any(awaitExpr =>
@@ -73,6 +73,11 @@ namespace AsyncFixer
 
             var name = methodCallSymbol.Name;
 
+            if (methodCallSymbol.ContainingType == null)
+            {
+                return "None";
+            }
+
             if (methodCallSymbol.ContainingType.Name == "Thread" && name == "Sleep")
             {
                 return "Task.Delay";
@@ -91,7 +96,6 @@ namespace AsyncFixer
                 return "Task.WhenAny";
             }
 
-
             foreach (var tmp in list)
             {
                 if (tmp.Name.Equals(name + "Async"))
@@ -99,6 +103,7 @@ namespace AsyncFixer
                     return tmp.Name;
                 }
             }
+
             return "None";
         }
     }
