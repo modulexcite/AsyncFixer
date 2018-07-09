@@ -140,7 +140,7 @@
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
   <data name="UnnecessaryAsyncMessage" xml:space="preserve">
-    <value>The method '{0}' do not need to use async/await.</value>
+    <value>The method '{0}' does not need to use async/await.</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
   <data name="UnnecessaryAsyncTitle" xml:space="preserve">
