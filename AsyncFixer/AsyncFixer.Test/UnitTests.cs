@@ -36,12 +36,12 @@ namespace AsyncFixer.Test
     namespace ConsoleApplication1
     {
         class TypeName
-        {   
+        {
         }
     }";
             var expected = new DiagnosticResult
             {
-                Id = Constants.UnnecessaryAsyncId,
+                Id = Constants.LongRunningId,
                 Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
@@ -63,7 +63,7 @@ namespace AsyncFixer.Test
     namespace ConsoleApplication1
     {
         class TYPENAME
-        {   
+        {
         }
     }";
             VerifyCSharpFix(test, fixtest);
@@ -71,12 +71,12 @@ namespace AsyncFixer.Test
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
-            return new UnnecessaryAsyncFixer();
+            return new LongRunningFixer();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
-            return new UnnecessaryAsyncAnalyzer();
+            return new LongRunningAnalyzer();
         }
     }
 }

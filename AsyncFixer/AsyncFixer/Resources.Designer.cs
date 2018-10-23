@@ -114,32 +114,5 @@ namespace AsyncFixer {
                 return ResourceManager.GetString("LongRunningTitle", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Await is the last statement of the method so you can return Task and await in the caller method..
-        /// </summary>
-        internal static string UnnecessaryAsyncDescription {
-            get {
-                return ResourceManager.GetString("UnnecessaryAsyncDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The method &apos;{0}&apos; do not need to use async/await..
-        /// </summary>
-        internal static string UnnecessaryAsyncMessage {
-            get {
-                return ResourceManager.GetString("UnnecessaryAsyncMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unnecessary async/await usage.
-        /// </summary>
-        internal static string UnnecessaryAsyncTitle {
-            get {
-                return ResourceManager.GetString("UnnecessaryAsyncTitle", resourceCulture);
-            }
-        }
     }
 }
